@@ -157,8 +157,8 @@ No known bugs at this time.
 Make an API for the AirBnB
 
 ## Authors
-Kaleab Tesfaye - [Github](https://github.com/kalom60)
-Jennifer Huang - [Github](https://github.com/jhuang10123) / [Twitter](https://twitter.com/earthtojhuang)
+* Kaleab Tesfaye - [Github](https://github.com/kalom60)
+* Anteneh Bizuneh - [Github](https://github.com/Anteneh2121) 
 
 
 ## License
