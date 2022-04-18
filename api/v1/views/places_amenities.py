@@ -1,75 +1,96 @@
 #!/usr/bin/python3
-from flask import abort, jsonify, make_response
+'''Contains the places_reviews view for the API.'''
+from flask import jsonify, request
+from werkzeug.exceptions import NotFound, MethodNotAllowed, BadRequest
+
 from api.v1.views import app_views
 from models import storage
-from models import amenity
-from models.amenity import Amenity
 from models.place import Place
-from os import getenv
+from models.review import Review
+from models.user import User
 
 
-@app_views.route('/places/<place_id>/amenities',
-                 methods=['GET'], strict_slashes=False)
-def place_amenities(place_id):
-    """Retrieves the list of all Amenity objects of a Place"""
-    obj_place = storage.get(Place, place_id)
-    if not obj_place:
-        abort(404)
-
-    if getenv('HBNB_TYPE_STORAGE') == 'db':
-        obj = [amenity.to_dict() for amenity in obj_place.amenities]
+@app_views.route('/places/<place_id>/reviews', methods=['GET', 'POST'])
+@app_views.route('/reviews/<review_id>', methods=['GET', 'DELETE', 'PUT'])
+def handle_reviews(place_id=None, review_id=None):
+    '''The method handler for the reviews endpoint.
+    '''
+    handlers = {
+        'GET': get_reviews,
+        'DELETE': remove_review,
+        'POST': add_review,
+        'PUT': update_review
+    }
+    if request.method in handlers:
+        return handlers[request.method](place_id, review_id)
     else:
-        obj = [storage.get(Amenity, amenity_id).to_dict()
-               for amenity_id in obj_place.amenity_ids]
-    return jsonify(obj)
+        raise MethodNotAllowed(list(handlers.keys()))
 
 
-@app_views.route('/places/<place_id>/amenities/<amenity_id>',
-                 methods=['DELETE'], strict_slashes=False)
-def del_place_amenity(place_id, amenity_id):
-    """Returns an empty dictionary with the status code 200"""
-    obj_place = storage.get(Place, place_id)
-    if not obj_place:
-        abort(404)
-
-    obj_amenity = storage.get(Amenity, amenity_id)
-    if not obj_amenity:
-        abort(404)
-
-    if getenv('HBNB_TYPE_STORAGE') == 'db':
-        if obj_amenity not in obj_place:
-            abort(404)
-    else:
-        if obj_amenity not in obj_place:
-            abort(404)
-        pos = obj_place.amenity_ids.index(amenity_id)
-        obj_place.amenity_ids.pop(pos)
-
-    obj_amenity.delete()
-    storage.save()
-    return make_response(jsonify({}), 200)
+def get_reviews(place_id=None, review_id=None):
+    '''Gets the review with the given id or all reviews in
+    the place with the given id.
+    '''
+    if place_id:
+        place = storage.get(Place, place_id)
+        if place:
+            reviews = []
+            for review in place.reviews:
+                reviews.append(review.to_dict())
+            return jsonify(reviews)
+    elif review_id:
+        review = storage.get(Review, review_id)
+        if review:
+            return jsonify(review.to_dict())
+    raise NotFound()
 
 
-@app_views.route('/places/<place_id>/amenities/<amenity_id>',
-                 methods=['POST'], strict_slashes=False)
-def link_place_amenity(place_id, amenity_id):
-    """Returns the Amenity with the status code 201"""
-    obj_place = storage.get(Place, place_id)
-    if not obj_place:
-        abort(404)
+def remove_review(place_id=None, review_id=None):
+    '''Removes a review with the given id.
+    '''
+    review = storage.get(Review, review_id)
+    if review:
+        storage.delete(review)
+        storage.save()
+        return jsonify({}), 200
+    raise NotFound()
 
-    obj_amenity = storage.get(Amenity, amenity_id)
-    if not obj_amenity:
-        abort(404)
 
-    if getenv('HBNB_TYPE_STORAGE') == 'db':
-        if obj_amenity in obj_place.amenities:
-            return make_response(jsonify(obj_amenity.to_dict()), 200)
-        obj_place.amenities.append(obj_amenity)
-    else:
-        if amenity_id in obj_place.amenity_ids:
-            return make_response(jsonify(obj_amenity.to_dict()), 200)
-        obj_place.amenity_ids.append(amenity_id)
+def add_review(place_id=None, review_id=None):
+    '''Adds a new review.
+    '''
+    place = storage.get(Place, place_id)
+    if not place:
+        raise NotFound()
+    data = request.get_json()
+    if type(data) is not dict:
+        raise BadRequest(description='Not a JSON')
+    if 'user_id' not in data:
+        raise BadRequest(description='Missing user_id')
+    user = storage.get(User, data['user_id'])
+    if not user:
+        raise NotFound()
+    if 'text' not in data:
+        raise BadRequest(description='Missing text')
+    data['place_id'] = place_id
+    new_review = Review(**data)
+    new_review.save()
+    return jsonify(new_review.to_dict()), 201
 
-    storage.save()
-    return make_response(jsonify(obj_amenity.to_dict()), 201)
+
+def update_review(place_id=None, review_id=None):
+    '''Updates the review with the given id.
+    '''
+    xkeys = ('id', 'user_id', 'place_id', 'created_at', 'updated_at')
+    if review_id:
+        review = storage.get(Review, review_id)
+        if review:
+            data = request.get_json()
+            if type(data) is not dict:
+                raise BadRequest(description='Not a JSON')
+            for key, value in data.items():
+                if key not in xkeys:
+                    setattr(review, key, value)
+            review.save()
+            return jsonify(review.to_dict()), 200
+    raise NotFound()
