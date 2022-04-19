@@ -96,13 +96,13 @@ def put_place(place_id):
 @app_views.route('/places_search', methods=['POST'], strict_slashes=False)
 def places_search():
     req = request.get_json()
-    if not req:
+    if req is None:
         abort(400, "Not a JSON")
 
-    if req is None or (
-        req.get('states') is None and
-        req.get('cities') is None and
-        req.get('amenities') is None
+    if not req or (
+        not req.get('states') and
+        not req.get('cities') and
+        not req.get('amenities')
     ):
         obj_place = storage.all(Place)
         return jsonify([obj.to_dict() for obj in obj_place.values()])
