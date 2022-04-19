@@ -134,18 +134,24 @@ def places_search():
         places = [place for place in places.values()]
 
     if req.get('amenities'):
-        obj_amenities = []
-        for ids in req.get('amenities'):
-            obj_amenities.append(Amenity, ids)
+        obj_am = [storage.get("Amenity", id) for id in req.get('amenities')]
+        i = 0
+        limit = len(places)
 
         url = "http://0.0.0.0:5000/api/v1/places/"
-        for num in range(len(places)):
-            full_url = url + '{}/amenities'.format(places[num].id)
-            res = requests.get(full_url)
-            place_amenities = [json.loads(res.text)]
-            for amenities in obj_amenities:
-                if amenities not in place_amenities:
-                    del places[num]
+        while i < limit:
+            place = places[i]
+            url = url + '{}/amenities'
+            req = url.format(place.id)
+            response = requests.get(req)
+            res_am = json.loads(response.text)
+            amenities = [storage.get(Amenity, am['id']) for am in res_am]
+            for amenity in obj_am:
+                if amenity not in amenities:
+                    places.pop(i)
+                    i -= 1
+                    limit -= 1
                     break
+            i += 1
 
     return jsonify([obj.to_dict() for obj in places])
