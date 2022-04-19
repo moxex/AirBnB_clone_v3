@@ -143,7 +143,7 @@ def places_search():
             obj_amenities.append(storage.get(Amenity, ids))
 
         url = "http://0.0.0.0:5000/api/v1/places/"
-        num = 5
+        num = 0
         while num < len(places):
             obj_place = places[num]
             res = requests.get(url + '{}/amenities'.format(obj_place.id))
