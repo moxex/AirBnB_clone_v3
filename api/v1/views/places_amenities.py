@@ -37,18 +37,14 @@ def del_place_amenity(place_id, amenity_id):
     if not obj_amenity:
         abort(404)
 
-    if getenv('HBNB_TYPE_STORAGE') == 'db':
-        if obj_amenity not in obj_place:
-            abort(404)
-        obj_amenity.delete()
-        storage.save()
-    else:
-        if obj_amenity not in obj_place:
-            abort(404)
-        pos = obj_place.amenity_ids.index(amenity_id)
-        obj_place.amenity_ids.pop(pos)
-
-    return make_response(jsonify({}), 200)
+    for elem in obj_place.amenities:
+        if elem.id == obj_amenity.id:
+            if getenv('HBNB_TYPE_STORAGE') == 'db':
+                obj_place.amenities.remove(obj_amenity)
+            else:
+                obj_place.amenity_ids.remove(obj_amenity)
+            storage.save()
+            return make_response(jsonify({}), 200)
 
 
 @app_views.route('/places/<place_id>/amenities/<amenity_id>',
