@@ -40,7 +40,7 @@ def del_review(review_id):
 
 
 @app_views.route('/places/<place_id>/reviews',
-                 methods=['PUSH'], strict_slashes=False)
+                 methods=['POST'], strict_slashes=False)
 def push_review(place_id):
     """Returns the new Review with the status code 201"""
     obj_place = storage.get(Place, place_id)
@@ -67,7 +67,7 @@ def push_review(place_id):
 
 
 @app_views.route('/reviews/<review_id>',
-                 methods=['DELETE'], strict_slashes=False)
+                 methods=['PUT'], strict_slashes=False)
 def put_review(review_id):
     """Returns the Review object with the status code 200"""
     obj = storage.get(Review, review_id)
