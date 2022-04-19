@@ -142,7 +142,11 @@ def places_search():
         ams = [storage.get(Amenity, id) for id in req.get('amenities')]
         i = 0
         limit = len(places)
-        first_url = "http://0.0.0.0:5000/api/v1/places/"
+        HBNB_API_HOST = getenv('HBNB_API_HOST')
+        HBNB_API_PORT = getenv('HBNB_API_PORT')
+
+        port = 5000 if not HBNB_API_PORT else HBNB_API_PORT
+        first_url = "http://0.0.0.0:{}/api/v1/places/".format(port)
         while i < limit:
             place = places[i]
             url = first_url + '{}/amenities'
