@@ -95,6 +95,10 @@ def put_place(place_id):
 
 @app_views.route('/places_search', methods=['POST'], strict_slashes=False)
 def places_search():
+    """
+    retrieves all Place objects depending
+    of the JSON in the body of the request
+    """
     req = request.get_json()
     if req is None:
         abort(400, "Not a JSON")
