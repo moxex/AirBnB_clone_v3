@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+'''Contains the places view for the API.'''
 from flask import abort, jsonify, make_response, request
 import requests
 from api.v1.views import app_views
