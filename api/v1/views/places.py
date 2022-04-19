@@ -153,6 +153,7 @@ def places_search():
             obj_place = places[num]
             full_url = url + '{}/amenities'
             req = full_url.format(place.id)
+            res = requests.get(req)
             place_am = json.loads(res.text)
             for am in place_am:
                 if am not in obj_amenities:
