@@ -152,7 +152,7 @@ def places_search():
         while num < len(places):
             obj_place = places[num]
             full_url = url + '{}/amenities'
-            req = full_url.format(place.id)
+            req = full_url.format(obj_place.id)
             res = requests.get(req)
             place_am = json.loads(res.text)
             for am in place_am:
