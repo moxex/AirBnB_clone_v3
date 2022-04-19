@@ -151,7 +151,8 @@ def places_search():
         num = 0
         while num < len(places):
             obj_place = places[num]
-            res = requests.get(url + '{}/amenities'.format(obj_place.id))
+            full_url = url + '{}/amenities'
+            req = full_url.format(place.id)
             place_am = json.loads(res.text)
             for am in place_am:
                 if am not in obj_amenities:
