@@ -133,6 +133,10 @@ def places_search():
                 if obj_place not in places:
                     places.append(obj_place)
 
+    if not places:
+        places = storage.all(Place)
+        places = [place for place in places.values()]
+
     if req.get('amenities'):
         obj_amenities = []
         for ids in req.get('amenities'):
